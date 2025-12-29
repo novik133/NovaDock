@@ -2,6 +2,15 @@
 
 A macOS/GNOME-style dock and application launcher for XFCE4.
 
+<p align="center">
+  <img src="Screenshot/1.png" width="100%" alt="NovaDock Main View">
+</p>
+
+<p align="center">
+  <img src="Screenshot/2.png" width="48%" />
+  <img src="Screenshot/3.png" width="48%" />
+</p>
+
 ## Features
 
 - **Dock Panel** - Animated dock with macOS-style magnification effect
