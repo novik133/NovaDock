@@ -1,0 +1,18 @@
+# Build
+build/
+builddir/
+
+# Editor
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
+
+# Compiled
+*.o
+*.so
+*.a
+
+# Config (user-specific)
+.kiro/

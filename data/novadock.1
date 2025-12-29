@@ -1,0 +1,109 @@
+.TH NOVADOCK 1 "December 2024" "NovaDock 0.1.0" "User Commands"
+.SH NAME
+novadock \- macOS-style dock and application launcher for XFCE4
+.SH SYNOPSIS
+.B novadock
+[\fIOPTIONS\fR]
+.SH DESCRIPTION
+NovaDock is a modern dock and full-screen application launcher designed for XFCE4,
+featuring macOS-style magnification effects, app indicators, and a customizable
+plugin system.
+.SH OPTIONS
+.TP
+.B \-\-launcher
+Open the full-screen application launcher directly.
+.TP
+.B \-\-settings
+Open the settings window.
+.TP
+.B \-\-help
+Display help information.
+.TP
+.B \-\-version
+Display version information.
+.SH FEATURES
+.TP
+.B Dock Panel
+Animated dock with magnification effect on hover, running app indicators,
+and drag-and-drop icon reordering.
+.TP
+.B Application Launcher
+Full-screen launchpad with grid view, real-time search, and keyboard navigation.
+.TP
+.B Pin/Unpin Apps
+Right-click to pin running apps or unpin favorites from the dock.
+.TP
+.B Plugin System
+Extensible architecture supporting custom dock plugins. Built-in plugins
+include Trash, Show Desktop, and Separator.
+.TP
+.B Theming
+Installable themes for dock customization. Themes are stored in
+~/.local/share/novadock/themes/
+.SH FILES
+.TP
+.I ~/.config/novadock/config.ini
+User configuration file containing pinned apps, dock settings, and enabled plugins.
+.TP
+.I ~/.local/share/novadock/themes/
+User-installed themes directory.
+.TP
+.I /usr/share/novadock/themes/
+System-wide themes directory.
+.SH CONFIGURATION
+Configuration is stored in INI format. Example:
+.PP
+.nf
+[Dock]
+pinned=org.gnome.Nautilus;firefox;org.gnome.Terminal
+icon_size=48
+magnification=1.5
+auto_hide=false
+position=bottom
+theme=default
+
+[Plugins]
+enabled=trash;show-desktop
+.fi
+.SH THEME FORMAT
+Themes use INI format with the following sections:
+.PP
+.nf
+[Theme]
+name=My Theme
+
+[Background]
+red=0.15
+green=0.15
+blue=0.15
+alpha=0.75
+
+[Border]
+red=1.0
+green=1.0
+blue=1.0
+alpha=0.15
+
+[Indicator]
+red=1.0
+green=1.0
+blue=1.0
+alpha=0.9
+
+[Style]
+corner_radius=16
+border_width=1
+.fi
+.SH KEYBOARD SHORTCUTS
+.TP
+.B Escape
+Close the application launcher.
+.TP
+.B Any key
+Focus search bar in launcher and start typing.
+.SH AUTHOR
+Written for XFCE4 desktop environment.
+.SH BUGS
+Report bugs at: https://github.com/novadock/novadock/issues
+.SH SEE ALSO
+.BR xfce4-panel (1)
