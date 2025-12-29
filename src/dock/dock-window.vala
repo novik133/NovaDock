@@ -192,21 +192,22 @@ namespace NovaDock {
 
             string position = config.get_position();
             int x, y;
+            int hide_offset = hidden ? base_height - 4 : 0;
 
             switch (position) {
                 case "left":
-                    x = geometry.x;
+                    x = geometry.x - hide_offset;
                     y = geometry.y + (geometry.height - dock_length) / 2;
                     resize(base_height, dock_length);
                     break;
                 case "right":
-                    x = geometry.x + geometry.width - base_height;
+                    x = geometry.x + geometry.width - base_height + hide_offset;
                     y = geometry.y + (geometry.height - dock_length) / 2;
                     resize(base_height, dock_length);
                     break;
                 default: // bottom
                     x = geometry.x + (geometry.width - dock_length) / 2;
-                    y = geometry.y + geometry.height - base_height;
+                    y = geometry.y + geometry.height - base_height + hide_offset;
                     resize(dock_length, base_height);
                     break;
             }
@@ -635,6 +636,11 @@ namespace NovaDock {
             // Rebuild items list with updated plugin settings
             rebuild_items();
             
+            // Handle autohide state change
+            if (!auto_hide && hidden) {
+                hidden = false;
+            }
+            
             position_dock();
             queue_draw();
         }
@@ -671,6 +677,22 @@ namespace NovaDock {
                 var trash = plugin_manager.get_plugin("trash");
                 if (trash != null) {
                     items.append(new DockItem.from_plugin(trash));
+                }
+            }
+            
+            // Add user plugins
+            foreach (var plugin in plugin_manager.get_user_plugins()) {
+                if (config.get_plugin_enabled(plugin.id)) {
+                    var item = new DockItem.from_plugin(plugin);
+                    items.append(item);
+                    
+                    // Connect widget update signal
+                    if (plugin is ScriptPlugin) {
+                        var sp = plugin as ScriptPlugin;
+                        if (sp.is_widget) {
+                            sp.updated.connect(() => queue_draw());
+                        }
+                    }
                 }
             }
             

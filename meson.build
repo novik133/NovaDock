@@ -1,5 +1,5 @@
 project('novadock', 'vala', 'c',
-  version: '0.1.0',
+  version: '0.1.1',
   meson_version: '>= 0.50.0',
 )
 
@@ -27,6 +27,7 @@ sources = files(
   'src/settings/settings-window.vala',
   'src/plugins/plugin.vala',
   'src/plugins/plugin-manager.vala',
+  'src/plugins/script-plugin.vala',
   'src/plugins/trash-plugin.vala',
   'src/plugins/show-desktop-plugin.vala',
   'src/plugins/separator-plugin.vala',

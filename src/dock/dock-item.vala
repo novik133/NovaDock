@@ -8,6 +8,7 @@ namespace NovaDock {
         public bool running { get; set; default = false; }
         public bool is_launcher { get; set; default = false; }
         public bool is_plugin { get; set; default = false; }
+        public bool is_widget { get; set; default = false; }
         public Plugin? plugin { get; set; default = null; }
         public List<weak Wnck.Window> windows;
 
@@ -26,6 +27,11 @@ namespace NovaDock {
             this.plugin = plugin;
             this.pinned = true;
             this.windows = new List<weak Wnck.Window>();
+            
+            if (plugin is ScriptPlugin) {
+                var sp = plugin as ScriptPlugin;
+                this.is_widget = sp.is_widget;
+            }
         }
     }
 }

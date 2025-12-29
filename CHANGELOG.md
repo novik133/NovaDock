@@ -1,6 +1,21 @@
 # Changelog
 
-## [0.1] - 2025-12-29
+## [0.1.1] - 2025-12-29
+
+### Added
+- Save and Cancel buttons in settings window
+- Install custom themes from zip files (Settings → Appearance)
+- Install custom plugins from zip files (Settings → Plugins)
+- Widget plugins support (clock, script output)
+- Theme documentation (docs/THEMES.md)
+- Plugin documentation (docs/PLUGINS.md)
+
+### Fixed
+- Auto-hide now works correctly (dock moves off-screen when hidden)
+- Settings changes only apply when Save is clicked
+- Settings window stays open after saving
+
+## [0.1.0] - 2025-12-29
 
 ### Added
 - macOS-style dock with magnification effect on hover

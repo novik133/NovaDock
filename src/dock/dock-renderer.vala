@@ -75,6 +75,13 @@ namespace NovaDock {
 
             int size = (int)(icon_size * scale);
             
+            // Widget plugins - draw text instead of icon
+            if (item.is_widget && item.plugin is ScriptPlugin) {
+                var sp = item.plugin as ScriptPlugin;
+                draw_widget_text(cr, sp.display_text, x, y, size);
+                return;
+            }
+            
             // Get icon name - for plugins, get it fresh each time
             string icon_name = item.icon_name;
             if (item.is_plugin && item.plugin != null) {
@@ -110,6 +117,21 @@ namespace NovaDock {
                     cr.fill();
                 }
             }
+        }
+
+        private void draw_widget_text(Cairo.Context cr, string text, double x, double y, int size) {
+            cr.select_font_face("Sans", Cairo.FontSlant.NORMAL, Cairo.FontWeight.BOLD);
+            cr.set_font_size(size * 0.35);
+            
+            Cairo.TextExtents extents;
+            cr.text_extents(text, out extents);
+            
+            double text_x = x - extents.width / 2;
+            double text_y = y + extents.height / 2;
+            
+            cr.set_source_rgba(1, 1, 1, 1);
+            cr.move_to(text_x, text_y);
+            cr.show_text(text);
         }
 
         public double calculate_scale(double distance, double hover_pos, bool hovering) {

@@ -60,7 +60,7 @@ NovaDock/
 │   ├── themes/         # Default themes
 │   ├── icons/          # Dock icons
 │   └── novadock.desktop
-├── plugins/            # External plugin examples
+├── docs/               # Documentation
 └── meson.build
 ```
 
@@ -71,6 +71,11 @@ novadock              # Start dock
 novadock --launcher   # Open launcher only
 novadock --settings   # Open settings
 ```
+
+## Customization
+
+- [Creating Custom Themes](docs/THEMES.md) - Customize dock colors, transparency, and style
+- [Creating Custom Plugins](docs/PLUGINS.md) - Add custom buttons and functionality to the dock
 
 ## License
 
