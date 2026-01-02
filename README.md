@@ -36,6 +36,7 @@ A macOS/GNOME-style dock and application launcher for XFCE4.
 - GLib 2.0
 - Vala compiler (valac)
 - Meson & Ninja
+- gtk-layer-shell (optional, for Wayland support)
 
 ## Building
 
@@ -46,16 +47,72 @@ ninja
 sudo ninja install
 ```
 
+## Installation from Packages
+
+Pre-built packages are available on the [Releases](https://github.com/novik133/NovaDock/releases) page.
+
+### Import GPG Key
+
+All packages are signed with GPG key `8419D50A73686C21`. Import the key before installing:
+
+```bash
+# Download the public key
+gpg --keyserver keyserver.ubuntu.com --recv-keys 8419D50A73686C21
+```
+
+### Debian/Ubuntu
+
+```bash
+# Import key for APT
+gpg --keyserver keyserver.ubuntu.com --recv-keys 8419D50A73686C21
+gpg --export 8419D50A73686C21 | sudo tee /usr/share/keyrings/novadock.gpg > /dev/null
+
+# Verify and install package
+gpg --verify novadock_0.1.2_amd64.deb.asc novadock_0.1.2_amd64.deb
+sudo dpkg -i novadock_0.1.2_amd64.deb
+```
+
+### Fedora/RHEL
+
+```bash
+# Import key for RPM
+gpg --keyserver keyserver.ubuntu.com --recv-keys 8419D50A73686C21
+gpg --export --armor 8419D50A73686C21 | sudo tee /etc/pki/rpm-gpg/RPM-GPG-KEY-novadock > /dev/null
+sudo rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-novadock
+
+# Verify and install package
+gpg --verify novadock-0.1.2-1.x86_64.rpm.asc novadock-0.1.2-1.x86_64.rpm
+sudo dnf install ./novadock-0.1.2-1.x86_64.rpm
+```
+
+### Arch Linux
+
+```bash
+# Import key for pacman
+gpg --keyserver keyserver.ubuntu.com --recv-keys 8419D50A73686C21
+sudo pacman-key --add <(gpg --export 8419D50A73686C21)
+sudo pacman-key --lsign-key 8419D50A73686C21
+
+# Verify and install package
+gpg --verify novadock-0.1.2-1-x86_64.pkg.tar.zst.asc novadock-0.1.2-1-x86_64.pkg.tar.zst
+sudo pacman -U novadock-0.1.2-1-x86_64.pkg.tar.zst
+```
+
 ## Project Structure
 
 ```
 NovaDock/
-├── src/
+├── lib/                # Library (libnovadock)
+│   ├── core/           # Application core
 │   ├── dock/           # Dock panel components
 │   ├── launcher/       # Full-screen app launcher
 │   ├── plugins/        # Plugin system & built-in plugins
 │   ├── settings/       # Settings UI
-│   └── main.vala       # Entry point
+│   ├── themes/         # Theme system
+│   └── meson.build
+├── src/
+│   ├── main.vala       # Entry point
+│   └── meson.build
 ├── data/
 │   ├── themes/         # Default themes
 │   ├── icons/          # Dock icons
