@@ -14,6 +14,9 @@ namespace NovaDock {
         private string? drag_app_id = null;
         private string? open_folder_id = null;
         private Gtk.Window? folder_window = null;
+        
+        private int icon_size = 64;
+        private int item_size = 100;
 
         public LauncherWindow(AppManager app_manager, ConfigManager config) {
             Object(
@@ -40,8 +43,25 @@ namespace NovaDock {
             scroll_event.connect(on_scroll);
             draw.connect(on_draw);
 
+            calculate_scale();
             build_ui();
             update_grid();
+        }
+
+        private void calculate_scale() {
+            var display = Gdk.Display.get_default();
+            var monitor = display.get_primary_monitor() ?? display.get_monitor(0);
+            var geom = monitor.get_geometry();
+            int height = geom.height;
+            
+            // Scale based on vertical resolution (1080p as baseline)
+            double scale = height / 1080.0;
+            scale = double.max(1.0, scale);  // Never go below 1x
+            
+            icon_size = (int)(64 * scale);
+            item_size = (int)(100 * scale);
+            cols = int.max(5, (int)(7 / scale + 0.5));
+            rows = int.max(3, (int)(4 / scale + 0.5));
         }
 
         private void build_ui() {
@@ -290,7 +310,7 @@ namespace NovaDock {
             var icon = new Gtk.Image();
             try {
                 var theme = Gtk.IconTheme.get_default();
-                var pixbuf = theme.load_icon(app.icon, 64, Gtk.IconLookupFlags.FORCE_SIZE);
+                var pixbuf = theme.load_icon(app.icon, icon_size, Gtk.IconLookupFlags.FORCE_SIZE);
                 icon.set_from_pixbuf(pixbuf);
             } catch (Error e) {
                 icon.set_from_icon_name("application-x-executable", Gtk.IconSize.DIALOG);
@@ -305,7 +325,7 @@ namespace NovaDock {
             box.pack_start(label, false, false, 0);
             
             btn.add(box);
-            btn.set_size_request(100, 100);
+            btn.set_size_request(item_size, item_size);
             
             // Left click - launch
             btn.clicked.connect(() => {
@@ -375,6 +395,7 @@ namespace NovaDock {
             icon_box.column_spacing = 2;
             icon_box.halign = Gtk.Align.CENTER;
             
+            int mini_icon = icon_size * 3 / 8;  // ~24px at 1x scale
             var apps = config.get_folder_apps(folder_id);
             int i = 0;
             foreach (var app_id in apps) {
@@ -384,7 +405,7 @@ namespace NovaDock {
                     var icon = new Gtk.Image();
                     try {
                         var theme = Gtk.IconTheme.get_default();
-                        var pixbuf = theme.load_icon(app.icon, 24, Gtk.IconLookupFlags.FORCE_SIZE);
+                        var pixbuf = theme.load_icon(app.icon, mini_icon, Gtk.IconLookupFlags.FORCE_SIZE);
                         icon.set_from_pixbuf(pixbuf);
                     } catch (Error e) {
                         icon.set_from_icon_name("application-x-executable", Gtk.IconSize.LARGE_TOOLBAR);
@@ -397,7 +418,7 @@ namespace NovaDock {
             // Folder background
             var folder_frame = new Gtk.Frame(null);
             folder_frame.get_style_context().add_class("folder-icon");
-            folder_frame.set_size_request(64, 64);
+            folder_frame.set_size_request(icon_size, icon_size);
             folder_frame.add(icon_box);
 
             var label = new Gtk.Label(config.get_folder_name(folder_id));

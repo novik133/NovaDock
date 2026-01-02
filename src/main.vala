@@ -1,5 +1,8 @@
 int main(string[] args) {
-    Wnck.Screen.get_default();
+    stderr.printf("NovaDock starting...\n");
     var app = new NovaDock.Application();
-    return app.run(args);
+    stderr.printf("Application created, running...\n");
+    int ret = app.run(args);
+    stderr.printf("Application exited with code %d\n", ret);
+    return ret;
 }

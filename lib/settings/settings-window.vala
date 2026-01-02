@@ -382,7 +382,7 @@ namespace NovaDock {
             title.use_markup = true;
             box.pack_start(title, false, false, 0);
 
-            var version = new Gtk.Label("Version 0.1.1");
+            var version = new Gtk.Label("Version 0.1.2");
             version.get_style_context().add_class("dim-label");
             box.pack_start(version, false, false, 0);
 
@@ -397,7 +397,7 @@ namespace NovaDock {
             author.margin_top = 20;
             box.pack_start(author, false, false, 0);
 
-            var copyright = new Gtk.Label("Copyright © 2025");
+            var copyright = new Gtk.Label("Copyright © 2025-2026");
             box.pack_start(copyright, false, false, 0);
 
             var email = new Gtk.LinkButton.with_label("mailto:novik@noviktech.com", "novik@noviktech.com");

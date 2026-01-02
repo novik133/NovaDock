@@ -99,13 +99,38 @@ namespace NovaDock {
             if (wnck_app == null) return null;
 
             string app_name = wnck_app.get_name().down();
+            string? class_group = window.get_class_group_name();
+            string? class_instance = window.get_class_instance_name();
+            string cg = class_group != null ? class_group.down() : "";
+            string ci = class_instance != null ? class_instance.down() : "";
+            
+            AppInfo? best_match = null;
+            int best_score = 0;
+            
             foreach (var app in apps.get_values()) {
-                if (app_name.contains(app.id.down()) || app.id.down().contains(app_name) ||
-                    app.name.down().contains(app_name) || app_name.contains(app.name.down())) {
-                    return app;
+                string id_lower = app.id.down();
+                string name_lower = app.name.down();
+                string exec_base = Path.get_basename(app.exec.split(" ")[0]).down();
+                int score = 0;
+                
+                // Exact matches get highest score
+                if (cg == id_lower || ci == id_lower) score = 100;
+                else if (cg == exec_base || ci == exec_base) score = 90;
+                else if (app_name == id_lower || app_name == name_lower) score = 80;
+                // Partial matches
+                else if (cg != "" && (cg.has_prefix(id_lower) || id_lower.has_prefix(cg))) score = 50;
+                else if (ci != "" && (ci.has_prefix(id_lower) || id_lower.has_prefix(ci))) score = 50;
+                else if (cg != "" && (cg.has_prefix(exec_base) || exec_base.has_prefix(cg))) score = 40;
+                else if (app_name.contains(id_lower) || id_lower.contains(app_name)) score = 30;
+                else if (name_lower.contains(app_name) || app_name.contains(name_lower)) score = 20;
+                
+                // Prefer shorter IDs (more specific match) when scores are equal
+                if (score > best_score || (score == best_score && best_match != null && id_lower.length < best_match.id.length)) {
+                    best_score = score;
+                    best_match = app;
                 }
             }
-            return null;
+            return best_match;
         }
     }
 }

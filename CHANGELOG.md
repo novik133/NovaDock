@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.1.2] - 2026-01-02
+
+### Added
+- Drag and drop support for .desktop files onto the dock
+
+### Fixed
+- Dock vibration/jitter when hovering over icons
+- Launcher icons too small on high-resolution displays
+- Transparent window rectangle visible behind dock on XFCE4
+
 ## [0.1.1] - 2025-12-29
 
 ### Added
