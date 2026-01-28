@@ -1,3 +1,4 @@
+[![Support me on Ko-fi](https://img.shields.io/badge/Support%20me%20on%20Ko--fi-F16061?style=for-the-badge&logo=ko-fi&logoColor=white)](https://ko-fi.com/novadesktop)
 # NovaDock
 
 A macOS/GNOME-style dock and application launcher for XFCE4.
