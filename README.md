@@ -69,8 +69,8 @@ gpg --keyserver keyserver.ubuntu.com --recv-keys 8419D50A73686C21
 gpg --export 8419D50A73686C21 | sudo tee /usr/share/keyrings/novadock.gpg > /dev/null
 
 # Verify and install package
-gpg --verify novadock_0.1.2_amd64.deb.asc novadock_0.1.2_amd64.deb
-sudo dpkg -i novadock_0.1.2_amd64.deb
+gpg --verify novadock_0.1.3_amd64.deb.asc novadock_0.1.3_amd64.deb
+sudo dpkg -i novadock_0.1.3_amd64.deb
 ```
 
 ### Fedora/RHEL
@@ -82,8 +82,8 @@ gpg --export --armor 8419D50A73686C21 | sudo tee /etc/pki/rpm-gpg/RPM-GPG-KEY-no
 sudo rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-novadock
 
 # Verify and install package
-gpg --verify novadock-0.1.2-1.x86_64.rpm.asc novadock-0.1.2-1.x86_64.rpm
-sudo dnf install ./novadock-0.1.2-1.x86_64.rpm
+gpg --verify novadock-0.1.3-1.x86_64.rpm.asc novadock-0.1.3-1.x86_64.rpm
+sudo dnf install ./novadock-0.1.3-1.x86_64.rpm
 ```
 
 ### Arch Linux
@@ -95,8 +95,8 @@ sudo pacman-key --add <(gpg --export 8419D50A73686C21)
 sudo pacman-key --lsign-key 8419D50A73686C21
 
 # Verify and install package
-gpg --verify novadock-0.1.2-1-x86_64.pkg.tar.zst.asc novadock-0.1.2-1-x86_64.pkg.tar.zst
-sudo pacman -U novadock-0.1.2-1-x86_64.pkg.tar.zst
+gpg --verify novadock-0.1.3-1-x86_64.pkg.tar.zst.asc novadock-0.1.3-1-x86_64.pkg.tar.zst
+sudo pacman -U novadock-0.1.3-1-x86_64.pkg.tar.zst
 ```
 
 ## Project Structure

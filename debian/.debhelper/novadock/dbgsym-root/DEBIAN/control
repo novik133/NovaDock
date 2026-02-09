@@ -1,0 +1,13 @@
+Package: novadock-dbgsym
+Package-Type: ddeb
+Source: novadock
+Version: 0.1.3
+Auto-Built-Package: debug-symbols
+Architecture: amd64
+Maintainer: Kamil 'Novik' Nowicki <novik@noviktech.com>
+Installed-Size: 609
+Depends: novadock (= 0.1.3)
+Section: debug
+Priority: optional
+Description: debug symbols for novadock
+Build-Ids: 48a081a1f249b686d3d82a9a6bf89c0c029c761a

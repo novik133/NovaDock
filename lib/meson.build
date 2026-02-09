@@ -1,3 +1,5 @@
+subdir('hotkeys')
+
 libnovadock_sources = files(
   'core/application.vala',
   'dock/dock-window.vala',
@@ -17,6 +19,8 @@ libnovadock_sources = files(
   'themes/theme.vala',
   'themes/theme-manager.vala',
 )
+
+libnovadock_sources += hotkeys_sources
 
 libnovadock = static_library('novadock',
   libnovadock_sources,

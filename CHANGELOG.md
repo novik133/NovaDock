@@ -1,5 +1,34 @@
 # Changelog
 
+## [0.1.3] - 2026-02-09
+
+### Added
+- Global hotkey support using keybinder-3.0 library
+- Configure launcher hotkey to toggle application launcher from anywhere
+- Configure up to 4 application hotkeys for quick launch/focus of pinned apps
+- Hotkey capture widget in settings for easy keyboard shortcut configuration
+- Hotkey conflict detection to prevent duplicate assignments
+- Launch or focus behavior: launches app if not running, focuses if already running
+- Automatic workspace switching when focusing apps on different workspaces
+- Hotkeys tab in settings window for all hotkey configuration
+- Persistent hotkey configuration saved to config file
+- Error handling for unsupported systems and registration failures
+- "Force Close" option in dock context menu to kill frozen applications
+- Ko-fi donation button in About tab with support message
+- Modernized About tab layout with better spacing and organization
+- Debian package (.deb) with proper dependencies and metadata
+
+### Fixed
+- Touchpad two-finger swipe gestures in launcher now work properly with smooth scrolling
+- Gestures no longer jump directly to last page
+- Dock now positions correctly on primary monitor in dual/multi-monitor setups
+- Dock no longer splits between monitors
+- Command-line flags (--launcher, --settings) now work correctly
+- Added short flags (-l, -s) for launcher and settings
+- Fixed dock vibration/jittering on mouse hover at the edges
+- Launcher grid now correctly shows 7 columns by default (was incorrectly showing 5)
+- Icon spacing in launcher now scales properly with screen resolution
+
 ## [0.1.2] - 2026-01-02
 
 ### Added

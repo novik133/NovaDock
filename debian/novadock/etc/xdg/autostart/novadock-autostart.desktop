@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=NovaDock
+Comment=macOS-style dock and launcher
+Exec=novadock
+Icon=novadock
+Hidden=false
+X-GNOME-Autostart-enabled=true
+X-XFCE-Autostart=true

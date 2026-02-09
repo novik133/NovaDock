@@ -20,6 +20,22 @@ namespace NovaDock {
         private bool pending_separator;
         private bool pending_show_desktop;
         private bool pending_trash;
+        
+        // Pending hotkey settings
+        private string pending_launcher_hotkey;
+        private string pending_app_hotkey_id_1;
+        private string pending_app_hotkey_1;
+        private string pending_app_hotkey_id_2;
+        private string pending_app_hotkey_2;
+        private string pending_app_hotkey_id_3;
+        private string pending_app_hotkey_3;
+        private string pending_app_hotkey_id_4;
+        private string pending_app_hotkey_4;
+        
+        // Hotkey UI components
+        private HotkeyCaptureButton launcher_hotkey_button;
+        private Gtk.ComboBoxText[] app_combo_boxes;
+        private HotkeyCaptureButton[] app_hotkey_buttons;
 
         public SettingsWindow(ConfigManager config, AppManager app_manager) {
             Object(
@@ -49,6 +65,17 @@ namespace NovaDock {
             pending_separator = config.get_plugin_enabled("separator");
             pending_show_desktop = config.get_plugin_enabled("show-desktop");
             pending_trash = config.get_plugin_enabled("trash");
+            
+            // Load hotkey settings
+            pending_launcher_hotkey = config.get_launcher_hotkey();
+            pending_app_hotkey_id_1 = config.get_app_hotkey_id(1);
+            pending_app_hotkey_1 = config.get_app_hotkey(1);
+            pending_app_hotkey_id_2 = config.get_app_hotkey_id(2);
+            pending_app_hotkey_2 = config.get_app_hotkey(2);
+            pending_app_hotkey_id_3 = config.get_app_hotkey_id(3);
+            pending_app_hotkey_3 = config.get_app_hotkey(3);
+            pending_app_hotkey_id_4 = config.get_app_hotkey_id(4);
+            pending_app_hotkey_4 = config.get_app_hotkey(4);
         }
 
         private void save_settings() {
@@ -62,6 +89,18 @@ namespace NovaDock {
             config.set_plugin_enabled("separator", pending_separator);
             config.set_plugin_enabled("show-desktop", pending_show_desktop);
             config.set_plugin_enabled("trash", pending_trash);
+            
+            // Save hotkey settings
+            config.set_launcher_hotkey(pending_launcher_hotkey);
+            config.set_app_hotkey_id(1, pending_app_hotkey_id_1);
+            config.set_app_hotkey(1, pending_app_hotkey_1);
+            config.set_app_hotkey_id(2, pending_app_hotkey_id_2);
+            config.set_app_hotkey(2, pending_app_hotkey_2);
+            config.set_app_hotkey_id(3, pending_app_hotkey_id_3);
+            config.set_app_hotkey(3, pending_app_hotkey_3);
+            config.set_app_hotkey_id(4, pending_app_hotkey_id_4);
+            config.set_app_hotkey(4, pending_app_hotkey_4);
+            
             settings_changed();
         }
 
@@ -90,6 +129,7 @@ namespace NovaDock {
             notebook.append_page(create_appearance_tab(), new Gtk.Label("Appearance"));
             notebook.append_page(create_behavior_tab(), new Gtk.Label("Behavior"));
             notebook.append_page(create_plugins_tab(), new Gtk.Label("Plugins"));
+            notebook.append_page(create_hotkeys_tab(), new Gtk.Label("Hotkeys"));
             notebook.append_page(create_hidden_apps_tab(), new Gtk.Label("Hidden Apps"));
             notebook.append_page(create_about_tab(), new Gtk.Label("About"));
 
@@ -314,6 +354,329 @@ namespace NovaDock {
             dialog.destroy();
         }
 
+        private Gtk.Widget create_hotkeys_tab() {
+            var grid = new Gtk.Grid();
+            grid.row_spacing = 12;
+            grid.column_spacing = 12;
+            grid.margin = 16;
+
+            int row = 0;
+            
+            // Initialize arrays
+            app_combo_boxes = new Gtk.ComboBoxText[4];
+            app_hotkey_buttons = new HotkeyCaptureButton[4];
+
+            // Launcher hotkey section
+            var launcher_label = new Gtk.Label("<b>Launcher Hotkey</b>");
+            launcher_label.use_markup = true;
+            launcher_label.halign = Gtk.Align.START;
+            grid.attach(launcher_label, 0, row++, 3, 1);
+
+            grid.attach(new Gtk.Label("Launcher:") { halign = Gtk.Align.END }, 0, row, 1, 1);
+            
+            launcher_hotkey_button = new HotkeyCaptureButton(pending_launcher_hotkey);
+            launcher_hotkey_button.hexpand = true;
+            launcher_hotkey_button.hotkey_changed.connect((new_hotkey) => {
+                // Check for conflicts
+                var conflict = check_hotkey_conflict(new_hotkey, "launcher");
+                if (conflict != null) {
+                    show_conflict_dialog(new_hotkey, conflict);
+                    // Revert to previous hotkey
+                    launcher_hotkey_button.revert_hotkey(pending_launcher_hotkey);
+                } else {
+                    pending_launcher_hotkey = new_hotkey;
+                }
+            });
+            grid.attach(launcher_hotkey_button, 1, row, 1, 1);
+            
+            var launcher_clear_btn = new Gtk.Button.with_label("Clear");
+            launcher_clear_btn.clicked.connect(() => {
+                launcher_hotkey_button.clear();
+                pending_launcher_hotkey = "";
+            });
+            grid.attach(launcher_clear_btn, 2, row++, 1, 1);
+
+            // Separator
+            var separator = new Gtk.Separator(Gtk.Orientation.HORIZONTAL);
+            separator.margin_top = 8;
+            separator.margin_bottom = 8;
+            grid.attach(separator, 0, row++, 3, 1);
+
+            // Application hotkeys section
+            var app_label = new Gtk.Label("<b>Application Hotkeys</b>");
+            app_label.use_markup = true;
+            app_label.halign = Gtk.Align.START;
+            grid.attach(app_label, 0, row++, 3, 1);
+
+            // Create 4 app hotkey slots
+            for (int i = 0; i < 4; i++) {
+                int slot = i + 1;
+                
+                grid.attach(new Gtk.Label("Slot %d:".printf(slot)) { halign = Gtk.Align.END }, 0, row, 1, 1);
+                
+                // App selection combo box
+                var app_combo = new Gtk.ComboBoxText();
+                app_combo.hexpand = true;
+                app_combo_boxes[i] = app_combo;
+                
+                // Get current app_id for this slot
+                string current_app_id = "";
+                switch (slot) {
+                    case 1: current_app_id = pending_app_hotkey_id_1; break;
+                    case 2: current_app_id = pending_app_hotkey_id_2; break;
+                    case 3: current_app_id = pending_app_hotkey_id_3; break;
+                    case 4: current_app_id = pending_app_hotkey_id_4; break;
+                }
+                
+                // Populate with pinned apps
+                populate_app_combo(app_combo, current_app_id);
+                
+                // Connect change handler
+                app_combo.changed.connect(() => {
+                    on_app_combo_changed(slot, app_combo);
+                });
+                
+                grid.attach(app_combo, 1, row, 1, 1);
+                
+                // Hotkey capture button
+                string current_hotkey = "";
+                switch (slot) {
+                    case 1: current_hotkey = pending_app_hotkey_1; break;
+                    case 2: current_hotkey = pending_app_hotkey_2; break;
+                    case 3: current_hotkey = pending_app_hotkey_3; break;
+                    case 4: current_hotkey = pending_app_hotkey_4; break;
+                }
+                
+                var hotkey_button = new HotkeyCaptureButton(current_hotkey);
+                hotkey_button.sensitive = (current_app_id != "");
+                app_hotkey_buttons[i] = hotkey_button;
+                
+                hotkey_button.hotkey_changed.connect((new_hotkey) => {
+                    // Check for conflicts
+                    string exclude_key = "app_%d".printf(slot);
+                    var conflict = check_hotkey_conflict(new_hotkey, exclude_key);
+                    if (conflict != null) {
+                        show_conflict_dialog(new_hotkey, conflict);
+                        // Revert to previous hotkey
+                        string previous_hotkey = "";
+                        switch (slot) {
+                            case 1: previous_hotkey = pending_app_hotkey_1; break;
+                            case 2: previous_hotkey = pending_app_hotkey_2; break;
+                            case 3: previous_hotkey = pending_app_hotkey_3; break;
+                            case 4: previous_hotkey = pending_app_hotkey_4; break;
+                        }
+                        hotkey_button.revert_hotkey(previous_hotkey);
+                    } else {
+                        on_app_hotkey_changed(slot, new_hotkey);
+                    }
+                });
+                
+                grid.attach(hotkey_button, 2, row, 1, 1);
+                
+                // Clear button
+                var clear_btn = new Gtk.Button.with_label("Clear");
+                clear_btn.clicked.connect(() => {
+                    on_clear_app_slot(slot);
+                });
+                grid.attach(clear_btn, 3, row++, 1, 1);
+            }
+
+            return grid;
+        }
+        
+        private void populate_app_combo(Gtk.ComboBoxText combo, string current_app_id) {
+            combo.remove_all();
+            combo.append("", "(None)");
+            
+            // Get pinned apps
+            var pinned_ids = config.get_pinned_apps();
+            
+            foreach (var app_id in pinned_ids) {
+                var app = app_manager.get_app(app_id);
+                if (app != null) {
+                    combo.append(app_id, app.name);
+                }
+            }
+            
+            // Set active item
+            if (current_app_id != "") {
+                combo.active_id = current_app_id;
+            } else {
+                combo.active_id = "";
+            }
+        }
+        
+        private void on_app_combo_changed(int slot, Gtk.ComboBoxText combo) {
+            string? app_id = combo.active_id;
+            if (app_id == null) app_id = "";
+            
+            // Update pending app_id
+            switch (slot) {
+                case 1: pending_app_hotkey_id_1 = app_id; break;
+                case 2: pending_app_hotkey_id_2 = app_id; break;
+                case 3: pending_app_hotkey_id_3 = app_id; break;
+                case 4: pending_app_hotkey_id_4 = app_id; break;
+            }
+            
+            // Enable/disable hotkey button based on selection
+            var hotkey_button = app_hotkey_buttons[slot - 1];
+            hotkey_button.sensitive = (app_id != "");
+            
+            // If app is cleared, also clear the hotkey
+            if (app_id == "") {
+                hotkey_button.clear();
+                switch (slot) {
+                    case 1: pending_app_hotkey_1 = ""; break;
+                    case 2: pending_app_hotkey_2 = ""; break;
+                    case 3: pending_app_hotkey_3 = ""; break;
+                    case 4: pending_app_hotkey_4 = ""; break;
+                }
+            }
+            
+            // Update duplicate prevention
+            update_app_combo_availability();
+        }
+        
+        private void on_app_hotkey_changed(int slot, string new_hotkey) {
+            switch (slot) {
+                case 1: pending_app_hotkey_1 = new_hotkey; break;
+                case 2: pending_app_hotkey_2 = new_hotkey; break;
+                case 3: pending_app_hotkey_3 = new_hotkey; break;
+                case 4: pending_app_hotkey_4 = new_hotkey; break;
+            }
+        }
+        
+        private void on_clear_app_slot(int slot) {
+            // Clear the app selection
+            var combo = app_combo_boxes[slot - 1];
+            combo.active_id = "";
+            
+            // Clear the hotkey
+            var hotkey_button = app_hotkey_buttons[slot - 1];
+            hotkey_button.clear();
+            
+            // Update pending values
+            switch (slot) {
+                case 1:
+                    pending_app_hotkey_id_1 = "";
+                    pending_app_hotkey_1 = "";
+                    break;
+                case 2:
+                    pending_app_hotkey_id_2 = "";
+                    pending_app_hotkey_2 = "";
+                    break;
+                case 3:
+                    pending_app_hotkey_id_3 = "";
+                    pending_app_hotkey_3 = "";
+                    break;
+                case 4:
+                    pending_app_hotkey_id_4 = "";
+                    pending_app_hotkey_4 = "";
+                    break;
+            }
+            
+            // Update duplicate prevention
+            update_app_combo_availability();
+        }
+        
+        private void update_app_combo_availability() {
+            // Get all selected app IDs
+            string[] selected_apps = new string[4];
+            selected_apps[0] = pending_app_hotkey_id_1;
+            selected_apps[1] = pending_app_hotkey_id_2;
+            selected_apps[2] = pending_app_hotkey_id_3;
+            selected_apps[3] = pending_app_hotkey_id_4;
+            
+            // For each combo box, disable apps that are selected in other slots
+            for (int i = 0; i < 4; i++) {
+                var combo = app_combo_boxes[i];
+                string current_selection = selected_apps[i];
+                
+                // Rebuild the combo to update availability
+                combo.remove_all();
+                combo.append("", "(None)");
+                
+                var pinned_ids = config.get_pinned_apps();
+                foreach (var app_id in pinned_ids) {
+                    var app = app_manager.get_app(app_id);
+                    if (app != null) {
+                        // Check if this app is selected in another slot
+                        bool selected_elsewhere = false;
+                        for (int j = 0; j < 4; j++) {
+                            if (j != i && selected_apps[j] == app_id) {
+                                selected_elsewhere = true;
+                                break;
+                            }
+                        }
+                        
+                        // Only add if not selected elsewhere
+                        if (!selected_elsewhere) {
+                            combo.append(app_id, app.name);
+                        }
+                    }
+                }
+                
+                // Restore selection
+                if (current_selection != "") {
+                    combo.active_id = current_selection;
+                } else {
+                    combo.active_id = "";
+                }
+            }
+        }
+        
+        private string? check_hotkey_conflict(string hotkey, string exclude_key) {
+            // Empty hotkeys don't conflict
+            if (hotkey == "") {
+                return null;
+            }
+            
+            // Check launcher hotkey
+            if (exclude_key != "launcher" && pending_launcher_hotkey == hotkey) {
+                return "Launcher";
+            }
+            
+            // Check app hotkey slots
+            if (exclude_key != "app_1" && pending_app_hotkey_1 == hotkey && pending_app_hotkey_1 != "") {
+                var app = app_manager.get_app(pending_app_hotkey_id_1);
+                string app_name = app != null ? app.name : "Slot 1";
+                return app_name;
+            }
+            
+            if (exclude_key != "app_2" && pending_app_hotkey_2 == hotkey && pending_app_hotkey_2 != "") {
+                var app = app_manager.get_app(pending_app_hotkey_id_2);
+                string app_name = app != null ? app.name : "Slot 2";
+                return app_name;
+            }
+            
+            if (exclude_key != "app_3" && pending_app_hotkey_3 == hotkey && pending_app_hotkey_3 != "") {
+                var app = app_manager.get_app(pending_app_hotkey_id_3);
+                string app_name = app != null ? app.name : "Slot 3";
+                return app_name;
+            }
+            
+            if (exclude_key != "app_4" && pending_app_hotkey_4 == hotkey && pending_app_hotkey_4 != "") {
+                var app = app_manager.get_app(pending_app_hotkey_id_4);
+                string app_name = app != null ? app.name : "Slot 4";
+                return app_name;
+            }
+            
+            return null;
+        }
+        
+        private void show_conflict_dialog(string hotkey, string conflicting_action) {
+            var dialog = new Gtk.MessageDialog(
+                this,
+                Gtk.DialogFlags.MODAL,
+                Gtk.MessageType.WARNING,
+                Gtk.ButtonsType.OK,
+                "Hotkey Conflict"
+            );
+            dialog.secondary_text = "The hotkey '%s' is already assigned to '%s'.\n\nPlease choose a different hotkey.".printf(hotkey, conflicting_action);
+            dialog.run();
+            dialog.destroy();
+        }
+
         private Gtk.Widget create_hidden_apps_tab() {
             var box = new Gtk.Box(Gtk.Orientation.VERTICAL, 8);
             box.margin = 16;
@@ -373,8 +736,8 @@ namespace NovaDock {
         }
 
         private Gtk.Widget create_about_tab() {
-            var box = new Gtk.Box(Gtk.Orientation.VERTICAL, 12);
-            box.margin = 24;
+            var box = new Gtk.Box(Gtk.Orientation.VERTICAL, 16);
+            box.margin = 32;
             box.halign = Gtk.Align.CENTER;
             box.valign = Gtk.Align.CENTER;
 
@@ -382,36 +745,67 @@ namespace NovaDock {
             title.use_markup = true;
             box.pack_start(title, false, false, 0);
 
-            var version = new Gtk.Label("Version 0.1.2");
+            var version = new Gtk.Label("Version 0.1.3");
             version.get_style_context().add_class("dim-label");
             box.pack_start(version, false, false, 0);
 
             var desc = new Gtk.Label("A macOS/GNOME-style dock and application launcher for XFCE4");
             desc.wrap = true;
             desc.justify = Gtk.Justification.CENTER;
-            desc.margin_top = 10;
+            desc.margin_top = 12;
             box.pack_start(desc, false, false, 0);
 
+            // Donation section
+            var donation_box = new Gtk.Box(Gtk.Orientation.VERTICAL, 8);
+            donation_box.margin_top = 24;
+            donation_box.margin_bottom = 12;
+            
+            var donation_label = new Gtk.Label("If you like this application, consider supporting its development");
+            donation_label.wrap = true;
+            donation_label.justify = Gtk.Justification.CENTER;
+            donation_label.get_style_context().add_class("dim-label");
+            donation_box.pack_start(donation_label, false, false, 0);
+            
+            var kofi_button = new Gtk.Button.with_label("☕ Support on Ko-fi");
+            kofi_button.get_style_context().add_class("suggested-action");
+            kofi_button.margin_top = 8;
+            kofi_button.clicked.connect(() => {
+                try {
+                    Gtk.show_uri_on_window(this, "https://ko-fi.com/novadesktop", Gdk.CURRENT_TIME);
+                } catch (Error e) {
+                    stderr.printf("Failed to open Ko-fi link: %s\n", e.message);
+                }
+            });
+            donation_box.pack_start(kofi_button, false, false, 0);
+            
+            box.pack_start(donation_box, false, false, 0);
+
+            // Links section
+            var links_box = new Gtk.Box(Gtk.Orientation.VERTICAL, 4);
+            links_box.margin_top = 12;
+            
             var author = new Gtk.Label("<b>Author:</b> Kamil 'Novik' Nowicki");
             author.use_markup = true;
-            author.margin_top = 20;
-            box.pack_start(author, false, false, 0);
-
-            var copyright = new Gtk.Label("Copyright © 2025-2026");
-            box.pack_start(copyright, false, false, 0);
+            links_box.pack_start(author, false, false, 0);
 
             var email = new Gtk.LinkButton.with_label("mailto:novik@noviktech.com", "novik@noviktech.com");
-            box.pack_start(email, false, false, 0);
+            links_box.pack_start(email, false, false, 0);
 
             var website = new Gtk.LinkButton.with_label("https://noviktech.com", "noviktech.com");
-            box.pack_start(website, false, false, 0);
+            links_box.pack_start(website, false, false, 0);
 
-            var github = new Gtk.LinkButton.with_label("https://github.com/novik133/NovaDock", "GitHub");
-            box.pack_start(github, false, false, 0);
+            var github = new Gtk.LinkButton.with_label("https://github.com/novik133/NovaDock", "GitHub Repository");
+            links_box.pack_start(github, false, false, 0);
+            
+            box.pack_start(links_box, false, false, 0);
+
+            var copyright = new Gtk.Label("Copyright © 2025-2026");
+            copyright.margin_top = 16;
+            copyright.get_style_context().add_class("dim-label");
+            box.pack_start(copyright, false, false, 0);
 
             var license = new Gtk.Label("<small>Licensed under GPL-3.0</small>");
             license.use_markup = true;
-            license.margin_top = 20;
             license.get_style_context().add_class("dim-label");
             box.pack_start(license, false, false, 0);
 

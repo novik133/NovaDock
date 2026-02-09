@@ -1,0 +1,55 @@
+novadock (0.1.3) unstable; urgency=medium
+
+  * Global hotkey support using keybinder-3.0 library
+  * Configure launcher hotkey to toggle application launcher
+  * Configure up to 4 application hotkeys for pinned apps
+  * Hotkey conflict detection
+  * Launch or focus behavior for application hotkeys
+  * Automatic workspace switching when focusing apps
+  * Force Close option in dock context menu
+  * Ko-fi donation button in About tab
+  * Fixed touchpad gesture scrolling in launcher
+  * Fixed dock positioning on multi-monitor setups
+  * Fixed command-line flags (--launcher, --settings)
+  * Fixed dock vibration/jittering on hover
+  * Fixed launcher grid column count (now shows 7 by default)
+  * Improved icon spacing that scales with resolution
+
+ -- Kamil 'Novik' Nowicki <novik@noviktech.com>  Sun, 09 Feb 2026 12:00:00 +0000
+
+novadock (0.1.2) unstable; urgency=medium
+
+  * Drag and drop support for .desktop files
+  * Fixed dock vibration/jitter on hover
+  * Fixed launcher icon sizing on high-resolution displays
+  * Fixed transparent window rectangle on XFCE4
+
+ -- Kamil 'Novik' Nowicki <novik@noviktech.com>  Thu, 02 Jan 2026 12:00:00 +0000
+
+novadock (0.1.1) unstable; urgency=medium
+
+  * Save and Cancel buttons in settings window
+  * Install custom themes from zip files
+  * Install custom plugins from zip files
+  * Widget plugins support
+  * Theme and plugin documentation
+  * Fixed auto-hide functionality
+  * Settings changes only apply when Save is clicked
+
+ -- Kamil 'Novik' Nowicki <novik@noviktech.com>  Sun, 29 Dec 2025 12:00:00 +0000
+
+novadock (0.1.0) unstable; urgency=low
+
+  * Initial release
+  * macOS-style dock with magnification effect
+  * Full-screen application launcher
+  * Pin/unpin applications
+  * Running app indicators
+  * Window list popup for multi-window apps
+  * Folder support in launcher
+  * Plugin system
+  * Theme support
+  * Multi-monitor support
+  * XFCE4 integration
+
+ -- Kamil 'Novik' Nowicki <novik@noviktech.com>  Sun, 29 Dec 2025 12:00:00 +0000

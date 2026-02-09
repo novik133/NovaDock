@@ -220,16 +220,24 @@ namespace NovaDock {
                 return;
             }
             
-            // X11 positioning
-            var screen = get_screen();
-            int screen_width = screen.get_width();
-            int screen_height = screen.get_height();
+            // X11 positioning - use primary monitor geometry
+            var display = Gdk.Display.get_default();
+            var monitor = display.get_primary_monitor();
+            if (monitor == null) {
+                monitor = display.get_monitor(0);
+            }
+            var geometry = monitor.get_geometry();
+            
+            int screen_width = geometry.width;
+            int screen_height = geometry.height;
+            int screen_x = geometry.x;
+            int screen_y = geometry.y;
             
             int dock_width = calculate_width();
             int hide_offset = hidden ? base_height - 4 : 0;
 
-            int x = (screen_width - dock_width) / 2;
-            int y = screen_height - base_height + hide_offset;
+            int x = screen_x + (screen_width - dock_width) / 2;
+            int y = screen_y + screen_height - base_height + hide_offset;
 
             resize(dock_width, base_height);
             move(x, y);
@@ -500,7 +508,7 @@ namespace NovaDock {
             hovering = false;
             mouse_x = -1;
             mouse_y = -1;
-            position_dock();
+            // Only reposition if auto-hide is enabled
             if (auto_hide && !hidden) {
                 hide_timeout_id = Timeout.add(config.get_hide_delay(), () => {
                     hidden = true;
@@ -666,6 +674,24 @@ namespace NovaDock {
                 var cl = new Gtk.MenuItem.with_label("Close Window");
                 cl.activate.connect(() => item.windows.nth_data(0).close(Gtk.get_current_event_time()));
                 context_menu.append(cl);
+                
+                var force_close = new Gtk.MenuItem.with_label("Force Close");
+                force_close.activate.connect(() => {
+                    var window = item.windows.nth_data(0);
+                    if (window != null) {
+                        int pid = window.get_pid();
+                        if (pid > 0) {
+                            // Send SIGKILL to force close the application
+                            string kill_cmd = "kill -9 %d".printf(pid);
+                            try {
+                                Process.spawn_command_line_async(kill_cmd);
+                            } catch (Error e) {
+                                stderr.printf("Failed to force close application: %s\n", e.message);
+                            }
+                        }
+                    }
+                });
+                context_menu.append(force_close);
             }
 
             context_menu.append(new Gtk.SeparatorMenuItem());

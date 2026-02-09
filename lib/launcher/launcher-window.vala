@@ -17,6 +17,12 @@ namespace NovaDock {
         
         private int icon_size = 64;
         private int item_size = 100;
+        private int grid_spacing = 25;
+        
+        // Smooth scroll accumulation for touchpad gestures
+        private double scroll_accumulator_x = 0.0;
+        private double scroll_accumulator_y = 0.0;
+        private const double SCROLL_THRESHOLD = 1.5;
 
         public LauncherWindow(AppManager app_manager, ConfigManager config) {
             Object(
@@ -53,6 +59,7 @@ namespace NovaDock {
             var monitor = display.get_primary_monitor() ?? display.get_monitor(0);
             var geom = monitor.get_geometry();
             int height = geom.height;
+            int width = geom.width;
             
             // Scale based on vertical resolution (1080p as baseline)
             double scale = height / 1080.0;
@@ -60,8 +67,17 @@ namespace NovaDock {
             
             icon_size = (int)(64 * scale);
             item_size = (int)(100 * scale);
-            cols = int.max(5, (int)(7 / scale + 0.5));
-            rows = int.max(3, (int)(4 / scale + 0.5));
+            grid_spacing = (int)(25 * scale);  // Scale spacing with resolution
+            
+            // Calculate cols and rows based on screen size
+            // Default is 7 cols x 4 rows at 1080p
+            cols = int.max(5, int.min(10, (int)(width / (item_size + grid_spacing))));
+            rows = int.max(3, int.min(6, (int)((height - 200) / (item_size + grid_spacing))));
+            
+            // Ensure we have at least 7 cols at standard resolutions
+            if (cols < 7 && width >= 1920) {
+                cols = 7;
+            }
         }
 
         private void build_ui() {
@@ -86,8 +102,8 @@ namespace NovaDock {
 
             // App grid
             app_grid = new Gtk.Grid();
-            app_grid.row_spacing = 25;
-            app_grid.column_spacing = 25;
+            app_grid.row_spacing = grid_spacing;
+            app_grid.column_spacing = grid_spacing;
             app_grid.halign = Gtk.Align.CENTER;
             app_grid.valign = Gtk.Align.CENTER;
             app_grid.vexpand = true;
@@ -731,6 +747,8 @@ namespace NovaDock {
                 if (current_page > 0) {
                     current_page--;
                     update_grid();
+                    scroll_accumulator_x = 0.0;
+                    scroll_accumulator_y = 0.0;
                 }
                 return true;
             }
@@ -738,21 +756,41 @@ namespace NovaDock {
                 if (current_page < total_pages - 1) {
                     current_page++;
                     update_grid();
+                    scroll_accumulator_x = 0.0;
+                    scroll_accumulator_y = 0.0;
                 }
                 return true;
             }
-            // Handle smooth scrolling
+            // Handle smooth scrolling (touchpad gestures)
             if (event.direction == Gdk.ScrollDirection.SMOOTH) {
-                if (event.delta_x > 0.5 || event.delta_y > 0.5) {
+                // Accumulate scroll deltas
+                scroll_accumulator_x += event.delta_x;
+                scroll_accumulator_y += event.delta_y;
+                
+                // Use the larger delta (horizontal or vertical)
+                double effective_delta = Math.fabs(scroll_accumulator_x) > Math.fabs(scroll_accumulator_y) 
+                    ? scroll_accumulator_x 
+                    : scroll_accumulator_y;
+                
+                // Check if we've accumulated enough delta to change pages
+                if (effective_delta > SCROLL_THRESHOLD) {
+                    // Scroll forward (right/down)
                     if (current_page < total_pages - 1) {
                         current_page++;
                         update_grid();
                     }
-                } else if (event.delta_x < -0.5 || event.delta_y < -0.5) {
+                    // Reset accumulator after page change
+                    scroll_accumulator_x = 0.0;
+                    scroll_accumulator_y = 0.0;
+                } else if (effective_delta < -SCROLL_THRESHOLD) {
+                    // Scroll backward (left/up)
                     if (current_page > 0) {
                         current_page--;
                         update_grid();
                     }
+                    // Reset accumulator after page change
+                    scroll_accumulator_x = 0.0;
+                    scroll_accumulator_y = 0.0;
                 }
                 return true;
             }

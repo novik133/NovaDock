@@ -245,5 +245,45 @@ namespace NovaDock {
             }
             return null;
         }
+
+        // Hotkey configuration methods
+        public string get_launcher_hotkey() {
+            try {
+                return keyfile.get_string("Hotkeys", "launcher");
+            } catch (Error e) {
+                return "";
+            }
+        }
+
+        public void set_launcher_hotkey(string hotkey) {
+            keyfile.set_string("Hotkeys", "launcher", hotkey);
+            save();
+        }
+
+        public string get_app_hotkey_id(int slot) {
+            try {
+                return keyfile.get_string("Hotkeys", "app_%d_id".printf(slot));
+            } catch (Error e) {
+                return "";
+            }
+        }
+
+        public void set_app_hotkey_id(int slot, string app_id) {
+            keyfile.set_string("Hotkeys", "app_%d_id".printf(slot), app_id);
+            save();
+        }
+
+        public string get_app_hotkey(int slot) {
+            try {
+                return keyfile.get_string("Hotkeys", "app_%d_hotkey".printf(slot));
+            } catch (Error e) {
+                return "";
+            }
+        }
+
+        public void set_app_hotkey(int slot, string hotkey) {
+            keyfile.set_string("Hotkeys", "app_%d_hotkey".printf(slot), hotkey);
+            save();
+        }
     }
 }

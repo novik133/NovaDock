@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=NovaDock
+Comment=macOS-style dock and launcher for XFCE4
+Exec=novadock
+Icon=novadock
+Categories=Utility;
+Keywords=dock;launcher;taskbar;
+StartupNotify=false
+X-XFCE-Autostart=true

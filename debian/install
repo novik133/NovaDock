@@ -1,0 +1,4 @@
+data/novadock.desktop usr/share/applications/
+data/novadock-autostart.desktop etc/xdg/autostart/
+data/icons/novadock-launcher.svg usr/share/icons/hicolor/scalable/apps/
+data/themes/default/theme.ini usr/share/novadock/themes/default/
