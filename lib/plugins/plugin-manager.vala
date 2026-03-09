@@ -1,4 +1,5 @@
 namespace NovaDock {
+    /* loads built-in and user-installed plugins */
     public class PluginManager : Object {
         private HashTable<string, Plugin> plugins;
         private ConfigManager config;
@@ -13,12 +14,14 @@ namespace NovaDock {
             load_user_plugins();
         }
 
+        /* register the three built-in plugins */
         private void load_builtin_plugins() {
             register_plugin(new TrashPlugin());
             register_plugin(new ShowDesktopPlugin());
             register_plugin(new SeparatorPlugin());
         }
 
+        /* scan user plugins directory for plugin.ini files */
         private void load_user_plugins() {
             try {
                 var dir = Dir.open(user_plugins_dir);
@@ -61,6 +64,7 @@ namespace NovaDock {
             return list;
         }
 
+        /* extract a plugin zip into the user plugins dir */
         public bool install_plugin(string zip_path) {
             try {
                 var name = Path.get_basename(zip_path).replace(".zip", "");

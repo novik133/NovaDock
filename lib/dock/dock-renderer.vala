@@ -1,4 +1,5 @@
 namespace NovaDock {
+    /* handles drawing dock icons with magnification and caching */
     public class DockRenderer : Object {
         private Gtk.IconTheme icon_theme;
         private HashTable<string, Gdk.Pixbuf?> icon_cache;
@@ -11,15 +12,15 @@ namespace NovaDock {
         public DockRenderer() {
             icon_theme = Gtk.IconTheme.get_default();
             icon_cache = new HashTable<string, Gdk.Pixbuf?>(str_hash, str_equal);
-            
-            // Clear cache when icon theme changes
+
+            /* invalidate cache when system icon theme changes */
             icon_theme.changed.connect(() => {
                 icon_cache.remove_all();
             });
         }
 
+        /* remove cached entries for a specific icon (e.g. trash state change) */
         public void clear_icon_cache(string icon_name) {
-            // Remove all sizes of this icon from cache
             var keys_to_remove = new List<string>();
             icon_cache.foreach((key, val) => {
                 if (key.has_prefix(icon_name + "_")) {
@@ -31,8 +32,8 @@ namespace NovaDock {
             }
         }
 
+        /* load icon at high res then scale down for quality */
         public Gdk.Pixbuf? get_icon(string icon_name, int size) {
-            // Always load at a fixed large size for quality, then scale
             int load_size = 96;
             string key = icon_name;
             
@@ -61,8 +62,8 @@ namespace NovaDock {
             return base_pixbuf;
         }
 
+        /* draw a single dock item at the given position and scale */
         public void draw_item(Cairo.Context cr, DockItem item, double x, double y, double scale, bool hovered) {
-            // Draw separator as a line, not an icon
             if (item.is_plugin && item.plugin != null && item.plugin.id == "separator") {
                 cr.set_source_rgba(1, 1, 1, 0.4);
                 cr.set_line_width(2);
@@ -134,12 +135,11 @@ namespace NovaDock {
             cr.show_text(text);
         }
 
+        /* compute magnification scale based on distance from cursor */
         public double calculate_scale(double distance, double hover_pos, bool hovering) {
             if (!hovering) return 1.0;
-
             double range = icon_size * 2.5;
             if (distance > range) return 1.0;
-
             double factor = 1.0 - (distance / range);
             return 1.0 + (magnification - 1.0) * factor * factor;
         }

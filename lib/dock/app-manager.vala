@@ -1,4 +1,5 @@
 namespace NovaDock {
+    /* stores metadata for a single desktop application */
     public class AppInfo : Object {
         public string id { get; set; }
         public string name { get; set; }
@@ -7,6 +8,7 @@ namespace NovaDock {
         public string desktop_file { get; set; }
         public string[] categories { get; set; }
 
+        /* parse a .desktop file into an AppInfo */
         public AppInfo.from_desktop_file(string path) {
             desktop_file = path;
             id = Path.get_basename(path).replace(".desktop", "");
@@ -34,6 +36,7 @@ namespace NovaDock {
             }
         }
 
+        /* spawn the application process */
         public void launch() {
             try {
                 Process.spawn_command_line_async(exec);
@@ -43,6 +46,7 @@ namespace NovaDock {
         }
     }
 
+    /* scans system for .desktop files and matches windows to apps */
     public class AppManager : Object {
         private HashTable<string, AppInfo> apps;
         private string[] app_dirs = {
@@ -50,6 +54,7 @@ namespace NovaDock {
             "/usr/local/share/applications"
         };
 
+        /* scan all app directories on construction */
         public AppManager() {
             apps = new HashTable<string, AppInfo>(str_hash, str_equal);
             var home = Environment.get_home_dir();
@@ -57,6 +62,7 @@ namespace NovaDock {
             load_applications();
         }
 
+        /* read .desktop files from standard directories */
         private void load_applications() {
             foreach (var dir in app_dirs) {
                 try {
@@ -75,6 +81,7 @@ namespace NovaDock {
             }
         }
 
+        /* check NoDisplay flag in .desktop file */
         private bool is_hidden(string path) {
             try {
                 var keyfile = new KeyFile();
@@ -86,14 +93,17 @@ namespace NovaDock {
             return false;
         }
 
+        /* look up an app by its id */
         public AppInfo? get_app(string id) {
             return apps.get(id);
         }
 
+        /* return all known applications */
         public List<weak AppInfo> get_all_apps() {
             return apps.get_values();
         }
 
+        /* find the best matching app for a given window using class/name heuristics */
         public AppInfo? find_by_window(Wnck.Window window) {
             var wnck_app = window.get_application();
             if (wnck_app == null) return null;

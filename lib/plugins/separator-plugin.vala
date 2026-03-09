@@ -1,4 +1,5 @@
 namespace NovaDock {
+    /* visual separator line between dock sections */
     public class SeparatorPlugin : Object, Plugin {
         public string id { get { return "separator"; } }
         public string name { get { return "Separator"; } }

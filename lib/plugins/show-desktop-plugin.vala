@@ -1,4 +1,5 @@
 namespace NovaDock {
+    /* dock plugin that toggles showing the desktop */
     public class ShowDesktopPlugin : Object, Plugin {
         public string id { get { return "show-desktop"; } }
         public string name { get { return "Show Desktop"; } }

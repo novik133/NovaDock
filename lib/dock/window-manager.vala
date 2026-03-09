@@ -1,4 +1,5 @@
 namespace NovaDock {
+    /* wraps libwnck to track open windows and emit change signals */
     public class WindowManager : Object {
         private Wnck.Screen? screen = null;
 
@@ -13,6 +14,7 @@ namespace NovaDock {
             }
         }
 
+        /* return all non-skip-tasklist windows */
         public List<weak Wnck.Window> get_windows() {
             var windows = new List<weak Wnck.Window>();
             if (screen == null) return windows;
@@ -24,6 +26,7 @@ namespace NovaDock {
             return windows;
         }
 
+        /* bring a window to front */
         public void activate_window(Wnck.Window window) {
             window.activate(Gtk.get_current_event_time());
         }

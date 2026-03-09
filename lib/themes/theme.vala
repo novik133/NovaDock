@@ -1,4 +1,5 @@
 namespace NovaDock {
+    /* dock visual theme with background, border and indicator colours */
     public class Theme : Object {
         public string id { get; set; }
         public string name { get; set; }
@@ -22,17 +23,20 @@ namespace NovaDock {
         public double corner_radius { get; set; default = 16; }
         public double border_width { get; set; default = 1; }
 
+        /* create a theme with default colours */
         public Theme(string id, string name) {
             this.id = id;
             this.name = name;
         }
 
+        /* load a theme from a theme.ini file */
         public Theme.from_file(string path) {
             this.path = path;
             this.id = Path.get_basename(Path.get_dirname(path));
             load();
         }
 
+        /* parse the theme.ini keyfile */
         private void load() {
             try {
                 var keyfile = new KeyFile();

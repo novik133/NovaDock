@@ -22,6 +22,8 @@ namespace NovaDock {
         private int dock_padding = 12;
         private int icon_area_height = 60;
         private uint hide_timeout_id = 0;
+        /* thin strip at screen bottom to catch mouse when dock is hidden */
+        private int hover_trigger_height = 6;
 
         private int drag_index = -1;
         private double drag_start_x;
@@ -114,6 +116,14 @@ namespace NovaDock {
             auto_hide = config.get_auto_hide();
             renderer.icon_size = config.get_icon_size();
             renderer.magnification = config.get_magnification();
+
+            /* periodically check if mouse entered the trigger zone while hidden */
+            Timeout.add(100, () => {
+                if (auto_hide && hidden) {
+                    check_mouse_at_edge();
+                }
+                return true;
+            });
         }
 
         private void load_plugins() {
@@ -213,34 +223,63 @@ namespace NovaDock {
             return int.max(total, 200);
         }
 
+        /* move the dock window to its correct position on screen */
         private void position_dock() {
             if (use_layer_shell) {
-                // Layer shell handles positioning
                 resize(calculate_width(), base_height);
                 return;
             }
-            
-            // X11 positioning - use primary monitor geometry
+
             var display = Gdk.Display.get_default();
             var monitor = display.get_primary_monitor();
             if (monitor == null) {
                 monitor = display.get_monitor(0);
             }
             var geometry = monitor.get_geometry();
-            
+
             int screen_width = geometry.width;
             int screen_height = geometry.height;
             int screen_x = geometry.x;
             int screen_y = geometry.y;
-            
+
             int dock_width = calculate_width();
-            int hide_offset = hidden ? base_height - 4 : 0;
+            /* when hidden, slide most of the dock off-screen but keep trigger strip */
+            int hide_offset = hidden ? base_height - hover_trigger_height : 0;
 
             int x = screen_x + (screen_width - dock_width) / 2;
             int y = screen_y + screen_height - base_height + hide_offset;
 
             resize(dock_width, base_height);
             move(x, y);
+        }
+
+        /* poll-based edge detection: show dock when mouse is at screen bottom */
+        private void check_mouse_at_edge() {
+            var display = Gdk.Display.get_default();
+            var seat = display.get_default_seat();
+            if (seat == null) return;
+            var pointer = seat.get_pointer();
+            if (pointer == null) return;
+
+            int mx, my;
+            pointer.get_position(null, out mx, out my);
+
+            var monitor = display.get_primary_monitor();
+            if (monitor == null) monitor = display.get_monitor(0);
+            var geom = monitor.get_geometry();
+
+            /* if mouse is within trigger strip at the bottom edge */
+            if (my >= geom.y + geom.height - hover_trigger_height &&
+                mx >= geom.x && mx <= geom.x + geom.width) {
+                if (hide_timeout_id != 0) {
+                    Source.remove(hide_timeout_id);
+                    hide_timeout_id = 0;
+                }
+                hidden = false;
+                hovering = true;
+                position_dock();
+                queue_draw();
+            }
         }
 
         private void update_running_apps() {
@@ -320,20 +359,32 @@ namespace NovaDock {
             return false;
         }
         
+        /* set the clickable area to match visible dock; when hidden expose trigger strip */
         private void update_input_shape(double dock_width) {
             var window = get_window();
             if (window == null) return;
-            
+
             int width = get_allocated_width();
             int height = get_allocated_height();
-            
-            var region = new Cairo.Region.rectangle({
-                (int)((width - dock_width) / 2.0),
-                height - icon_area_height - 4,
-                (int)dock_width,
-                icon_area_height + 4
-            });
-            window.input_shape_combine_region(region, 0, 0);
+
+            if (hidden) {
+                /* expose full width trigger strip so mouse enter events fire */
+                var region = new Cairo.Region.rectangle({
+                    0,
+                    height - hover_trigger_height,
+                    width,
+                    hover_trigger_height
+                });
+                window.input_shape_combine_region(region, 0, 0);
+            } else {
+                var region = new Cairo.Region.rectangle({
+                    (int)((width - dock_width) / 2.0),
+                    height - icon_area_height - 4,
+                    (int)dock_width,
+                    icon_area_height + 4
+                });
+                window.input_shape_combine_region(region, 0, 0);
+            }
         }
 
         private double get_current_dock_width() {
@@ -489,27 +540,43 @@ namespace NovaDock {
             }
         }
 
+        /* track mouse position and redraw for magnification effect */
         private bool on_motion(Gdk.EventMotion event) {
             mouse_x = event.x;
             mouse_y = event.y;
+            /* only redraw, never resize – prevents flickering */
             queue_draw();
             return true;
         }
 
+        /* mouse entered dock area – cancel any pending hide and reveal if hidden */
         private bool on_enter(Gdk.EventCrossing event) {
             hovering = true;
-            if (hide_timeout_id != 0) { Source.remove(hide_timeout_id); hide_timeout_id = 0; }
-            if (auto_hide && hidden) { hidden = false; position_dock(); }
+            if (hide_timeout_id != 0) {
+                Source.remove(hide_timeout_id);
+                hide_timeout_id = 0;
+            }
+            if (auto_hide && hidden) {
+                hidden = false;
+                position_dock();
+            }
             queue_draw();
             return true;
         }
 
+        /* mouse left dock area – schedule auto-hide after configured delay */
         private bool on_leave(Gdk.EventCrossing event) {
+            /* ignore spurious leave events caused by child widgets */
+            if (event.detail == Gdk.NotifyType.INFERIOR) {
+                return true;
+            }
             hovering = false;
             mouse_x = -1;
             mouse_y = -1;
-            // Only reposition if auto-hide is enabled
             if (auto_hide && !hidden) {
+                if (hide_timeout_id != 0) {
+                    Source.remove(hide_timeout_id);
+                }
                 hide_timeout_id = Timeout.add(config.get_hide_delay(), () => {
                     hidden = true;
                     position_dock();
@@ -703,13 +770,14 @@ namespace NovaDock {
             context_menu.popup_at_pointer(event);
         }
 
+        /* reload all settings from config file and rebuild dock items */
         public void reload_settings() {
             config = new ConfigManager();
             renderer.icon_size = config.get_icon_size();
             renderer.magnification = config.get_magnification();
             auto_hide = config.get_auto_hide();
             load_theme();
-            
+
             items = new List<DockItem>();
             var launcher_item = new DockItem("novadock-launcher", "Applications", "view-app-grid-symbolic");
             launcher_item.pinned = true;
@@ -717,7 +785,8 @@ namespace NovaDock {
             items.append(launcher_item);
             load_pinned_apps();
             load_plugins();
-            
+
+            /* if auto-hide was turned off, make sure dock is visible */
             if (!auto_hide && hidden) hidden = false;
             position_dock();
             queue_draw();

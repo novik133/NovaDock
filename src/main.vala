@@ -1,8 +1,6 @@
+/* entry point: initialise wnck and start the application */
 int main(string[] args) {
-    stderr.printf("NovaDock starting...\n");
+    Wnck.set_client_type(Wnck.ClientType.PAGER);
     var app = new NovaDock.Application();
-    stderr.printf("Application created, running...\n");
-    int ret = app.run(args);
-    stderr.printf("Application exited with code %d\n", ret);
-    return ret;
+    return app.run(args);
 }

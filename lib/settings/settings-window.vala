@@ -1,4 +1,5 @@
 namespace NovaDock {
+    /* settings window with modern sidebar navigation */
     public class SettingsWindow : Gtk.Window {
         private ConfigManager config;
         private AppManager app_manager;
@@ -7,9 +8,11 @@ namespace NovaDock {
         private Gtk.ListBox hidden_list;
         private Gtk.ComboBoxText theme_combo;
         private Gtk.Grid plugins_grid;
+        private Gtk.Stack content_stack;
+        private Gtk.ListBox sidebar;
         public signal void settings_changed();
 
-        // Pending settings
+        /* pending values held until the user clicks Save */
         private string pending_position;
         private int pending_icon_size;
         private double pending_magnification;
@@ -20,8 +23,8 @@ namespace NovaDock {
         private bool pending_separator;
         private bool pending_show_desktop;
         private bool pending_trash;
-        
-        // Pending hotkey settings
+
+        /* pending hotkey config */
         private string pending_launcher_hotkey;
         private string pending_app_hotkey_id_1;
         private string pending_app_hotkey_1;
@@ -31,8 +34,8 @@ namespace NovaDock {
         private string pending_app_hotkey_3;
         private string pending_app_hotkey_id_4;
         private string pending_app_hotkey_4;
-        
-        // Hotkey UI components
+
+        /* hotkey UI widgets */
         private HotkeyCaptureButton launcher_hotkey_button;
         private Gtk.ComboBoxText[] app_combo_boxes;
         private HotkeyCaptureButton[] app_hotkey_buttons;
@@ -40,8 +43,8 @@ namespace NovaDock {
         public SettingsWindow(ConfigManager config, AppManager app_manager) {
             Object(
                 title: "NovaDock Settings",
-                default_width: 450,
-                default_height: 450,
+                default_width: 620,
+                default_height: 480,
                 resizable: false
             );
             this.config = config;
@@ -49,9 +52,66 @@ namespace NovaDock {
             this.theme_manager = new ThemeManager();
             this.plugin_manager = new PluginManager(config);
             load_pending_settings();
+            apply_settings_css();
             build_ui();
-            
+
             this.show.connect(() => update_hidden_list());
+        }
+
+        /* apply modern CSS styles to the settings window */
+        private void apply_settings_css() {
+            var css = new Gtk.CssProvider();
+            try {
+                css.load_from_data("""
+                    .settings-sidebar {
+                        background: @theme_bg_color;
+                        border-right: 1px solid alpha(@theme_fg_color, 0.12);
+                        padding: 6px 0;
+                    }
+                    .settings-sidebar row {
+                        padding: 10px 18px;
+                        margin: 2px 6px;
+                        border-radius: 8px;
+                    }
+                    .settings-sidebar row:selected {
+                        background: alpha(@theme_selected_bg_color, 0.15);
+                    }
+                    .settings-sidebar row label {
+                        font-size: 13px;
+                    }
+                    .settings-content {
+                        padding: 24px;
+                    }
+                    .settings-section-title {
+                        font-weight: bold;
+                        font-size: 13px;
+                        margin-bottom: 8px;
+                        color: alpha(@theme_fg_color, 0.55);
+                    }
+                    .settings-row {
+                        padding: 8px 0;
+                    }
+                    .about-title {
+                        font-size: 22px;
+                        font-weight: 800;
+                    }
+                    .about-version {
+                        font-size: 12px;
+                        color: alpha(@theme_fg_color, 0.55);
+                    }
+                    .about-desc {
+                        font-size: 13px;
+                        color: alpha(@theme_fg_color, 0.7);
+                    }
+                    .paypal-button {
+                        padding: 8px 24px;
+                        border-radius: 20px;
+                    }
+                """);
+                Gtk.StyleContext.add_provider_for_screen(
+                    get_screen(), css, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
+                );
+            } catch (Error e) {}
         }
 
         private void load_pending_settings() {
@@ -104,36 +164,81 @@ namespace NovaDock {
             settings_changed();
         }
 
+        /* build the modern sidebar + content layout */
         private void build_ui() {
             var header = new Gtk.HeaderBar();
-            header.title = "Settings";
+            header.title = "NovaDock Settings";
             header.show_close_button = false;
-            
+
             var cancel_btn = new Gtk.Button.with_label("Cancel");
             cancel_btn.clicked.connect(() => {
                 load_pending_settings();
                 close();
             });
             header.pack_start(cancel_btn);
-            
+
             var save_btn = new Gtk.Button.with_label("Save");
             save_btn.get_style_context().add_class("suggested-action");
             save_btn.clicked.connect(() => save_settings());
             header.pack_end(save_btn);
-            
+
             set_titlebar(header);
 
-            var notebook = new Gtk.Notebook();
-            notebook.margin = 12;
+            /* horizontal split: sidebar | content */
+            var hbox = new Gtk.Box(Gtk.Orientation.HORIZONTAL, 0);
 
-            notebook.append_page(create_appearance_tab(), new Gtk.Label("Appearance"));
-            notebook.append_page(create_behavior_tab(), new Gtk.Label("Behavior"));
-            notebook.append_page(create_plugins_tab(), new Gtk.Label("Plugins"));
-            notebook.append_page(create_hotkeys_tab(), new Gtk.Label("Hotkeys"));
-            notebook.append_page(create_hidden_apps_tab(), new Gtk.Label("Hidden Apps"));
-            notebook.append_page(create_about_tab(), new Gtk.Label("About"));
+            /* sidebar list */
+            sidebar = new Gtk.ListBox();
+            sidebar.selection_mode = Gtk.SelectionMode.SINGLE;
+            sidebar.get_style_context().add_class("settings-sidebar");
+            sidebar.set_size_request(170, -1);
 
-            add(notebook);
+            string[] pages = { "Appearance", "Behavior", "Plugins", "Hotkeys", "Hidden Apps", "About" };
+            foreach (var page in pages) {
+                var label = new Gtk.Label(page);
+                label.halign = Gtk.Align.START;
+                sidebar.add(label);
+            }
+
+            /* content stack */
+            content_stack = new Gtk.Stack();
+            content_stack.transition_type = Gtk.StackTransitionType.CROSSFADE;
+            content_stack.transition_duration = 150;
+            content_stack.hexpand = true;
+            content_stack.vexpand = true;
+
+            content_stack.add_named(wrap_in_scroll(create_appearance_tab()), "Appearance");
+            content_stack.add_named(wrap_in_scroll(create_behavior_tab()), "Behavior");
+            content_stack.add_named(wrap_in_scroll(create_plugins_tab()), "Plugins");
+            content_stack.add_named(wrap_in_scroll(create_hotkeys_tab()), "Hotkeys");
+            content_stack.add_named(create_hidden_apps_tab(), "Hidden Apps");
+            content_stack.add_named(wrap_in_scroll(create_about_tab()), "About");
+
+            /* switch content when sidebar selection changes */
+            sidebar.row_selected.connect((row) => {
+                if (row == null) return;
+                int idx = row.get_index();
+                if (idx >= 0 && idx < pages.length) {
+                    content_stack.visible_child_name = pages[idx];
+                }
+            });
+
+            hbox.pack_start(sidebar, false, false, 0);
+            hbox.pack_start(new Gtk.Separator(Gtk.Orientation.VERTICAL), false, false, 0);
+            hbox.pack_start(content_stack, true, true, 0);
+
+            add(hbox);
+
+            /* select first page */
+            sidebar.select_row(sidebar.get_row_at_index(0));
+        }
+
+        /* helper: wrap a widget in a scrolled window */
+        private Gtk.Widget wrap_in_scroll(Gtk.Widget child) {
+            var scroll = new Gtk.ScrolledWindow(null, null);
+            scroll.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC);
+            scroll.add(child);
+            return scroll;
         }
 
         private Gtk.Widget create_appearance_tab() {
@@ -735,55 +840,58 @@ namespace NovaDock {
             hidden_list.show_all();
         }
 
+        /* about page with app info, PayPal donation and links */
         private Gtk.Widget create_about_tab() {
-            var box = new Gtk.Box(Gtk.Orientation.VERTICAL, 16);
+            var box = new Gtk.Box(Gtk.Orientation.VERTICAL, 12);
             box.margin = 32;
             box.halign = Gtk.Align.CENTER;
             box.valign = Gtk.Align.CENTER;
 
-            var title = new Gtk.Label("<span size='xx-large' weight='bold'>NovaDock</span>");
-            title.use_markup = true;
+            var title = new Gtk.Label("NovaDock");
+            title.get_style_context().add_class("about-title");
             box.pack_start(title, false, false, 0);
 
-            var version = new Gtk.Label("Version 0.1.3");
-            version.get_style_context().add_class("dim-label");
+            var version = new Gtk.Label("Version 0.2.0");
+            version.get_style_context().add_class("about-version");
             box.pack_start(version, false, false, 0);
 
             var desc = new Gtk.Label("A macOS/GNOME-style dock and application launcher for XFCE4");
+            desc.get_style_context().add_class("about-desc");
             desc.wrap = true;
             desc.justify = Gtk.Justification.CENTER;
-            desc.margin_top = 12;
+            desc.margin_top = 8;
             box.pack_start(desc, false, false, 0);
 
-            // Donation section
-            var donation_box = new Gtk.Box(Gtk.Orientation.VERTICAL, 8);
-            donation_box.margin_top = 24;
-            donation_box.margin_bottom = 12;
-            
-            var donation_label = new Gtk.Label("If you like this application, consider supporting its development");
+            /* donation section – PayPal */
+            var donation_box = new Gtk.Box(Gtk.Orientation.VERTICAL, 6);
+            donation_box.margin_top = 20;
+
+            var donation_label = new Gtk.Label("If you enjoy NovaDock, consider supporting development");
             donation_label.wrap = true;
             donation_label.justify = Gtk.Justification.CENTER;
-            donation_label.get_style_context().add_class("dim-label");
+            donation_label.get_style_context().add_class("about-desc");
             donation_box.pack_start(donation_label, false, false, 0);
-            
-            var kofi_button = new Gtk.Button.with_label("☕ Support on Ko-fi");
-            kofi_button.get_style_context().add_class("suggested-action");
-            kofi_button.margin_top = 8;
-            kofi_button.clicked.connect(() => {
+
+            var paypal_button = new Gtk.Button.with_label("Support via PayPal");
+            paypal_button.get_style_context().add_class("suggested-action");
+            paypal_button.get_style_context().add_class("paypal-button");
+            paypal_button.margin_top = 6;
+            paypal_button.halign = Gtk.Align.CENTER;
+            paypal_button.clicked.connect(() => {
                 try {
-                    Gtk.show_uri_on_window(this, "https://ko-fi.com/novadesktop", Gdk.CURRENT_TIME);
+                    Gtk.show_uri_on_window(this, "https://paypal.me/noviktech133", Gdk.CURRENT_TIME);
                 } catch (Error e) {
-                    stderr.printf("Failed to open Ko-fi link: %s\n", e.message);
+                    stderr.printf("Failed to open PayPal link: %s\n", e.message);
                 }
             });
-            donation_box.pack_start(kofi_button, false, false, 0);
-            
+            donation_box.pack_start(paypal_button, false, false, 0);
+
             box.pack_start(donation_box, false, false, 0);
 
-            // Links section
-            var links_box = new Gtk.Box(Gtk.Orientation.VERTICAL, 4);
-            links_box.margin_top = 12;
-            
+            /* links section */
+            var links_box = new Gtk.Box(Gtk.Orientation.VERTICAL, 2);
+            links_box.margin_top = 16;
+
             var author = new Gtk.Label("<b>Author:</b> Kamil 'Novik' Nowicki");
             author.use_markup = true;
             links_box.pack_start(author, false, false, 0);
@@ -796,17 +904,16 @@ namespace NovaDock {
 
             var github = new Gtk.LinkButton.with_label("https://github.com/novik133/NovaDock", "GitHub Repository");
             links_box.pack_start(github, false, false, 0);
-            
+
             box.pack_start(links_box, false, false, 0);
 
-            var copyright = new Gtk.Label("Copyright © 2025-2026");
-            copyright.margin_top = 16;
-            copyright.get_style_context().add_class("dim-label");
+            var copyright = new Gtk.Label("Copyright \u00a9 2025\u20132026");
+            copyright.margin_top = 12;
+            copyright.get_style_context().add_class("about-version");
             box.pack_start(copyright, false, false, 0);
 
-            var license = new Gtk.Label("<small>Licensed under GPL-3.0</small>");
-            license.use_markup = true;
-            license.get_style_context().add_class("dim-label");
+            var license = new Gtk.Label("Licensed under GPL-3.0");
+            license.get_style_context().add_class("about-version");
             box.pack_start(license, false, false, 0);
 
             return box;

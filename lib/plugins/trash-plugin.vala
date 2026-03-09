@@ -1,4 +1,5 @@
 namespace NovaDock {
+    /* dock plugin that shows trash icon and allows emptying trash */
     public class TrashPlugin : Object, Plugin {
         public string id { get { return "trash"; } }
         public string name { get { return "Trash"; } }
@@ -16,6 +17,7 @@ namespace NovaDock {
             setup_monitor();
         }
 
+        /* watch trash directory for changes */
         private void setup_monitor() {
             try {
                 var dir = File.new_for_path(trash_path);
@@ -60,6 +62,7 @@ namespace NovaDock {
             return menu;
         }
 
+        /* empty the trash via gio or manual fallback */
         private void empty_trash() {
             try {
                 // Use gio to properly empty trash

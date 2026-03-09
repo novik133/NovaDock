@@ -1,4 +1,5 @@
 namespace NovaDock {
+    /* manages built-in and user-installed dock themes */
     public class ThemeManager : Object {
         private HashTable<string, Theme> themes;
         private string themes_dir;
@@ -14,6 +15,7 @@ namespace NovaDock {
             scan_themes();
         }
 
+        /* create the four default themes */
         private void load_builtin_themes() {
             // Default (macOS-style)
             var def = new Theme("default", "Default");
@@ -42,6 +44,7 @@ namespace NovaDock {
             themes.set(trans.id, trans);
         }
 
+        /* scan system and user directories for theme.ini files */
         private void scan_themes() {
             scan_directory(themes_dir);
             scan_directory(user_themes_dir);
@@ -69,6 +72,7 @@ namespace NovaDock {
             return themes.get_values();
         }
 
+        /* extract a theme zip into user themes directory */
         public bool install_theme(string zip_path) {
             try {
                 var name = Path.get_basename(zip_path).replace(".zip", "");

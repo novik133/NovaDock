@@ -1,3 +1,18 @@
+novadock (0.2.0) unstable; urgency=medium
+
+  * Fixed icon flickering during magnification resize
+  * Fixed auto-hide: dock now reliably reappears when mouse moves to screen edge
+  * Fixed spurious leave events breaking auto-hide
+  * Fixed global hotkeys: proper keybinder format conversion
+  * Redesigned settings window with modern sidebar navigation
+  * Replaced Ko-fi with PayPal (@noviktech133) in About tab
+  * Added human-readable comments throughout codebase
+  * Removed debug print statements from application startup
+  * Improved input shape handling when dock is hidden
+  * Added poll-based edge detection as fallback for auto-hide
+
+ -- Kamil 'Novik' Nowicki <novik@noviktech.com>  Sun, 09 Feb 2026 18:00:00 +0000
+
 novadock (0.1.3) unstable; urgency=medium
 
   * Global hotkey support using keybinder-3.0 library

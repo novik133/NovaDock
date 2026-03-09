@@ -1,4 +1,5 @@
 namespace NovaDock {
+    /* interface all dock plugins must implement */
     public interface Plugin : Object {
         public abstract string id { get; }
         public abstract string name { get; }

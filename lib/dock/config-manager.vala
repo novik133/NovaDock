@@ -1,9 +1,11 @@
 namespace NovaDock {
+    /* reads and writes ~/.config/novadock/config.ini */
     public class ConfigManager : Object {
         private string config_dir;
         private string config_file;
         private KeyFile keyfile;
 
+        /* load or create config on construction */
         public ConfigManager() {
             config_dir = Path.build_filename(Environment.get_home_dir(), ".config", "novadock");
             config_file = Path.build_filename(config_dir, "config.ini");
@@ -13,12 +15,14 @@ namespace NovaDock {
             load();
         }
 
+        /* load config from disk, silently ignore if missing */
         private void load() {
             try {
                 keyfile.load_from_file(config_file, KeyFileFlags.NONE);
             } catch (Error e) {}
         }
 
+        /* persist config to disk */
         public void save() {
             try {
                 keyfile.save_to_file(config_file);
@@ -27,6 +31,7 @@ namespace NovaDock {
             }
         }
 
+        /* get list of pinned app ids or desktop file paths */
         public string[] get_pinned_apps() {
             try {
                 return keyfile.get_string_list("Dock", "pinned");
@@ -35,6 +40,7 @@ namespace NovaDock {
             }
         }
 
+        /* store pinned app list */
         public void set_pinned_apps(string[] apps) {
             keyfile.set_string_list("Dock", "pinned", apps);
             save();
@@ -159,7 +165,7 @@ namespace NovaDock {
             return false;
         }
 
-        // Folder management
+        /* get all folder ids from config */
         public string[] get_folder_ids() {
             try {
                 return keyfile.get_string_list("Folders", "ids");
@@ -246,7 +252,7 @@ namespace NovaDock {
             return null;
         }
 
-        // Hotkey configuration methods
+        /* hotkey configuration accessors */
         public string get_launcher_hotkey() {
             try {
                 return keyfile.get_string("Hotkeys", "launcher");

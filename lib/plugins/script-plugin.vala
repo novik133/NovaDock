@@ -1,4 +1,5 @@
 namespace NovaDock {
+    /* user-defined plugin loaded from a plugin.ini file */
     public class ScriptPlugin : Object, Plugin {
         private string _id;
         private string _name;
@@ -23,6 +24,7 @@ namespace NovaDock {
 
         public signal void updated();
 
+        /* load plugin config from an ini file */
         public ScriptPlugin.from_file(string path) {
             _path = path;
             _display_text = "";
@@ -42,6 +44,7 @@ namespace NovaDock {
             if (_timer_id > 0) Source.remove(_timer_id);
         }
 
+        /* parse the plugin.ini keyfile */
         private void load() {
             try {
                 var keyfile = new KeyFile();
@@ -67,6 +70,7 @@ namespace NovaDock {
             }
         }
 
+        /* refresh widget display text from format string or script output */
         private void update_widget() {
             if (_format != null) {
                 var now = new DateTime.now_local();

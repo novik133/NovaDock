@@ -71,102 +71,86 @@ namespace NovaDock {
             }
         }
         
+        /* build a human-readable hotkey string like "Super+Ctrl+A" */
         private string format_hotkey_string(Gdk.EventKey event) {
             var parts = new List<string>();
-            
-            // Extract modifiers in consistent order: Super, Ctrl, Alt, Shift
+
             if ((event.state & Gdk.ModifierType.SUPER_MASK) != 0 ||
                 (event.state & Gdk.ModifierType.MOD4_MASK) != 0) {
                 parts.append("Super");
             }
-            
             if ((event.state & Gdk.ModifierType.CONTROL_MASK) != 0) {
                 parts.append("Ctrl");
             }
-            
             if ((event.state & Gdk.ModifierType.MOD1_MASK) != 0) {
                 parts.append("Alt");
             }
-            
             if ((event.state & Gdk.ModifierType.SHIFT_MASK) != 0) {
                 parts.append("Shift");
             }
-            
-            // Get the key name
+
             string key_name = get_key_name(event.keyval);
             parts.append(key_name);
-            
-            // Join with "+"
+
             string result = "";
             foreach (var part in parts) {
-                if (result != "") {
-                    result += "+";
-                }
+                if (result != "") result += "+";
                 result += part;
             }
-            
+            return result;
+        }
+
+        /* convert display format "Super+Ctrl+A" to keybinder format "<Super><Ctrl>a" */
+        public static string to_keybinder_format(string hotkey) {
+            if (hotkey == "") return "";
+            var parts = hotkey.split("+");
+            string result = "";
+            for (int i = 0; i < parts.length; i++) {
+                string p = parts[i].strip();
+                if (i < parts.length - 1) {
+                    /* modifier keys wrapped in angle brackets */
+                    result += "<" + p + ">";
+                } else {
+                    /* final key in lowercase for keybinder */
+                    result += p.down();
+                }
+            }
             return result;
         }
         
+        /* map GDK keyval to a readable key name */
         private string get_key_name(uint keyval) {
-            // Handle special keys
             switch (keyval) {
-                case Gdk.Key.space:
-                    return "Space";
-                case Gdk.Key.Return:
-                    return "Return";
-                case Gdk.Key.Tab:
-                    return "Tab";
-                case Gdk.Key.BackSpace:
-                    return "BackSpace";
-                case Gdk.Key.Delete:
-                    return "Delete";
-                case Gdk.Key.Insert:
-                    return "Insert";
-                case Gdk.Key.Home:
-                    return "Home";
-                case Gdk.Key.End:
-                    return "End";
-                case Gdk.Key.Page_Up:
-                    return "Page_Up";
-                case Gdk.Key.Page_Down:
-                    return "Page_Down";
-                case Gdk.Key.Up:
-                    return "Up";
-                case Gdk.Key.Down:
-                    return "Down";
-                case Gdk.Key.Left:
-                    return "Left";
-                case Gdk.Key.Right:
-                    return "Right";
-                case Gdk.Key.F1:
-                    return "F1";
-                case Gdk.Key.F2:
-                    return "F2";
-                case Gdk.Key.F3:
-                    return "F3";
-                case Gdk.Key.F4:
-                    return "F4";
-                case Gdk.Key.F5:
-                    return "F5";
-                case Gdk.Key.F6:
-                    return "F6";
-                case Gdk.Key.F7:
-                    return "F7";
-                case Gdk.Key.F8:
-                    return "F8";
-                case Gdk.Key.F9:
-                    return "F9";
-                case Gdk.Key.F10:
-                    return "F10";
-                case Gdk.Key.F11:
-                    return "F11";
-                case Gdk.Key.F12:
-                    return "F12";
+                case Gdk.Key.space:     return "space";
+                case Gdk.Key.Return:    return "Return";
+                case Gdk.Key.Tab:       return "Tab";
+                case Gdk.Key.BackSpace: return "BackSpace";
+                case Gdk.Key.Delete:    return "Delete";
+                case Gdk.Key.Insert:    return "Insert";
+                case Gdk.Key.Home:      return "Home";
+                case Gdk.Key.End:       return "End";
+                case Gdk.Key.Page_Up:   return "Page_Up";
+                case Gdk.Key.Page_Down: return "Page_Down";
+                case Gdk.Key.Up:        return "Up";
+                case Gdk.Key.Down:      return "Down";
+                case Gdk.Key.Left:      return "Left";
+                case Gdk.Key.Right:     return "Right";
+                case Gdk.Key.F1:  return "F1";
+                case Gdk.Key.F2:  return "F2";
+                case Gdk.Key.F3:  return "F3";
+                case Gdk.Key.F4:  return "F4";
+                case Gdk.Key.F5:  return "F5";
+                case Gdk.Key.F6:  return "F6";
+                case Gdk.Key.F7:  return "F7";
+                case Gdk.Key.F8:  return "F8";
+                case Gdk.Key.F9:  return "F9";
+                case Gdk.Key.F10: return "F10";
+                case Gdk.Key.F11: return "F11";
+                case Gdk.Key.F12: return "F12";
                 default:
-                    // For regular keys, get the name and convert to uppercase
                     string name = Gdk.keyval_name(keyval);
                     if (name != null && name.length > 0) {
+                        /* return capitalised for display; to_keybinder_format lowercases it */
                         return name.up();
                     }
                     return "Unknown";

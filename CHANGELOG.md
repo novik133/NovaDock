@@ -1,5 +1,27 @@
 # Changelog
 
+## [0.2.0] - 2026-03-09
+
+### Added
+- Modern sidebar navigation in settings window (replaces tab layout)
+- PayPal donation support (@noviktech133) in About tab
+- Poll-based edge detection as auto-hide fallback
+- Human-readable comments throughout entire codebase
+- Arch Linux package (PKGBUILD)
+
+### Fixed
+- Icon flickering during magnification/resize on hover
+- Auto-hide: dock now reliably reappears when mouse moves to screen bottom edge
+- Spurious leave events no longer break auto-hide (filtered INFERIOR notifications)
+- Global hotkeys now register correctly (proper keybinder angle-bracket format conversion)
+- Input shape now covers full-width trigger strip when dock is hidden
+- Removed debug print statements from application startup
+
+### Changed
+- Settings window redesigned with sidebar + stack layout
+- Replaced Ko-fi donation with PayPal in About tab
+- Version bumped to 0.2.0
+
 ## [0.1.3] - 2026-02-09
 
 ### Added
