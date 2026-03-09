@@ -53,12 +53,13 @@ jobs:
       - name: Build package
         run: |
           dpkg-buildpackage -us -uc -b
+          mv ../*.deb .
       
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: debian-package
-          path: "../*.deb"
+          path: "*.deb"
 
   build-fedora:
     name: Build Fedora RPM Package
