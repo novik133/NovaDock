@@ -21,7 +21,7 @@ Requires:       gtk3 >= 3.22
 Requires:       glib2 >= 2.50
 Requires:       libwnck3 >= 3.20
 Requires:       gtk-layer-shell >= 0.1
-Requires:       libkeybinder3 >= 0.3.0
+Requires:       keybinder3 >= 0.3.0
 
 %description
 NovaDock is a modern, feature-rich dock and application launcher designed

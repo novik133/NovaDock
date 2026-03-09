@@ -71,7 +71,7 @@ jobs:
         run: |
           dnf install -y rpm-build rpmdevtools meson ninja-build vala gcc \
             gtk3-devel glib2-devel libwnck3-devel gtk-layer-shell-devel \
-            libkeybinder3-devel git
+            keybinder3-devel git
       
       - name: Checkout code
         uses: actions/checkout@v4
