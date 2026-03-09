@@ -54,8 +54,6 @@ Features:
 %doc README.md CHANGELOG.md
 %{_bindir}/novadock
 %{_datadir}/applications/novadock.desktop
-%{_datadir}/icons/hicolor/scalable/apps/novadock-launcher.svg
-%{_datadir}/novadock/
 %{_mandir}/man1/novadock.1*
 %config(noreplace) %{_sysconfdir}/xdg/autostart/novadock-autostart.desktop
 
