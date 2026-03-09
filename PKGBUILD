@@ -22,12 +22,12 @@ source=("${pkgname}-${pkgver}.tar.gz::${url}/archive/v${pkgver}.tar.gz")
 sha256sums=('SKIP')
 
 build() {
-  cd "${pkgname}-${pkgver}"
+  cd "NovaDock-${pkgver}"
   meson setup build --prefix=/usr
   ninja -C build
 }
 
 package() {
-  cd "${pkgname}-${pkgver}"
+  cd "NovaDock-${pkgver}"
   DESTDIR="${pkgdir}" ninja -C build install
 }

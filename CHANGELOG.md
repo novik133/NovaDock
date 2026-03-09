@@ -6,7 +6,6 @@
 - Modern sidebar navigation in settings window (replaces tab layout)
 - PayPal donation support (@noviktech133) in About tab
 - Poll-based edge detection as auto-hide fallback
-- Human-readable comments throughout entire codebase
 - Arch Linux package (PKGBUILD)
 
 ### Fixed
