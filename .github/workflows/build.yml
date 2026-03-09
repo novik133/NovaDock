@@ -1,0 +1,118 @@
+name: Build Packages
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  build-arch:
+    name: Build Arch Linux Package
+    runs-on: ubuntu-latest
+    container:
+      image: archlinux:latest
+    
+    steps:
+      - name: Update system and install dependencies
+        run: |
+          pacman -Syu --noconfirm
+          pacman -S --noconfirm base-devel git meson ninja vala gtk3 libwnck3 glib2 gtk-layer-shell libkeybinder3
+      
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Build package
+        run: |
+          useradd -m builder
+          chown -R builder:builder .
+          su builder -c "makepkg -sf --noconfirm"
+      
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: arch-package
+          path: "*.pkg.tar.zst"
+
+  build-debian:
+    name: Build Debian Package
+    runs-on: ubuntu-latest
+    container:
+      image: debian:bookworm
+    
+    steps:
+      - name: Install dependencies
+        run: |
+          apt-get update
+          apt-get install -y build-essential debhelper meson valac libgtk-3-dev \
+            libglib2.0-dev libwnck-3-dev libgtk-layer-shell-dev libkeybinder-3.0-dev git
+      
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Build package
+        run: |
+          dpkg-buildpackage -us -uc -b
+      
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: debian-package
+          path: "../*.deb"
+
+  build-fedora:
+    name: Build Fedora RPM Package
+    runs-on: ubuntu-latest
+    container:
+      image: fedora:latest
+    
+    steps:
+      - name: Install dependencies
+        run: |
+          dnf install -y rpm-build rpmdevtools meson ninja-build vala gcc \
+            gtk3-devel glib2-devel libwnck3-devel gtk-layer-shell-devel \
+            libkeybinder3-devel git
+      
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup RPM build environment
+        run: |
+          rpmdev-setuptree
+          cp novadock.spec ~/rpmbuild/SPECS/
+          tar czf ~/rpmbuild/SOURCES/novadock-${GITHUB_REF_NAME#v}.tar.gz \
+            --transform "s,^,NovaDock-${GITHUB_REF_NAME#v}/," \
+            --exclude='.git' --exclude='.github' .
+      
+      - name: Build RPM
+        run: |
+          cd ~/rpmbuild/SPECS
+          rpmbuild -ba novadock.spec
+      
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: fedora-package
+          path: "~/rpmbuild/RPMS/*/*.rpm"
+
+  create-release:
+    name: Create Release with Packages
+    needs: [build-arch, build-debian, build-fedora]
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+    
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+      
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            arch-package/*.pkg.tar.zst
+            debian-package/*.deb
+            fedora-package/*.rpm
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
